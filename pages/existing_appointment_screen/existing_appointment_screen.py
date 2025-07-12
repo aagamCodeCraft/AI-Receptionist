@@ -9,7 +9,6 @@ class ExistingAppointmentScreen(tk.Frame):
         self.configure(bg='#EAF2F8')
         self.doctor_widgets = {}
         
-        # Variables for vertical drag-scrolling
         self._scroll_start_y = 0
         self._scroll_start_view = 0
         
@@ -43,7 +42,7 @@ class ExistingAppointmentScreen(tk.Frame):
             doc_frame = tk.Frame(self.scrollable_frame, bg='white', bd=2, relief="groove")
             doc_frame.pack(fill='x', pady=5, padx=10)
 
-            name_label = tk.Label(doc_frame, text=doctor["name"], font=("Helvetica", 14, "bold"), bg='white')
+            name_label = tk.Label(doc_frame, font=("Helvetica", 14, "bold"), bg='white')
             name_label.pack(pady=(5, 0))
 
             status_label = tk.Label(doc_frame, font=("Helvetica", 12), bg='white')
@@ -52,9 +51,12 @@ class ExistingAppointmentScreen(tk.Frame):
             action_button = tk.Button(doc_frame, font=self.controller.button_font, fg="white", width=25)
             action_button.pack(pady=(0, 10))
             
-            self.doctor_widgets[doctor["name"]] = {"status_label": status_label, "action_button": action_button}
+            self.doctor_widgets[doctor["name"]] = {
+                "name_label": name_label,
+                "status_label": status_label,
+                "action_button": action_button
+            }
         
-        # Bind events to all child widgets for universal scrolling
         self.bind_all_children(self.scrollable_frame)
 
         self.back_button = tk.Button(self, text="Back", font=self.controller.button_font, bg="#E74C3C", fg="white", command=lambda: self.controller.show_frame("WelcomeScreen"))
@@ -63,46 +65,32 @@ class ExistingAppointmentScreen(tk.Frame):
         self.update_language()
 
     def on_mousewheel(self, event):
-        # This logic works for Windows, macOS, and Linux
         if event.num == 4 or event.delta > 0:
             self.canvas.yview_scroll(-1, "units")
         elif event.num == 5 or event.delta < 0:
             self.canvas.yview_scroll(1, "units")
 
-    # --- VERTICAL DRAG-SCROLLING (CORRECTED) ---
     def start_scroll(self, event):
-        """Records the starting Y position for vertical scrolling."""
         self._scroll_start_y = event.y
         self._scroll_start_view = self.canvas.yview()[0]
 
     def do_scroll(self, event):
-        """Moves the canvas vertically based on mouse drag."""
         delta = self._scroll_start_y - event.y
-        # Calculate the new position based on the pixel delta
         new_pos = self._scroll_start_view + (delta / self.scrollable_frame.winfo_height())
-        # Move the canvas view and clamp the value between 0.0 and 1.0
         self.canvas.yview_moveto(max(0.0, min(1.0, new_pos)))
 
     def bind_all_children(self, parent_widget):
-        """Recursively binds mousewheel and drag events to all child widgets."""
-        # Bind mouse wheel for all platforms
         parent_widget.bind("<MouseWheel>", self.on_mousewheel)
-        parent_widget.bind("<Button-4>", self.on_mousewheel) # Linux scroll up
-        parent_widget.bind("<Button-5>", self.on_mousewheel) # Linux scroll down
-        
-        # Bind click-and-drag for vertical scrolling
+        parent_widget.bind("<Button-4>", self.on_mousewheel)
+        parent_widget.bind("<Button-5>", self.on_mousewheel)
         parent_widget.bind("<ButtonPress-1>", self.start_scroll)
         parent_widget.bind("<B1-Motion>", self.do_scroll)
-
         for child in parent_widget.winfo_children():
             self.bind_all_children(child)
 
     def notify_doctor(self, doctor_name):
         lang = self.controller.lang_manager
-        messagebox.showinfo(
-            lang.get("doctor_notified_title"),
-            lang.get("doctor_notified_message")
-        )
+        messagebox.showinfo(lang.get("doctor_notified_title"), lang.get("doctor_notified_message"))
         self.controller.show_frame("WelcomeScreen")
 
     def update_language(self):
@@ -110,15 +98,21 @@ class ExistingAppointmentScreen(tk.Frame):
         self.title_label.config(text=lang.get("existing_appointment_title"))
         self.back_button.config(text=lang.get("back"))
         
+        # --- FIX ---
+        is_hindi = lang.current_lang == "hi"
+
         for doctor in ALL_DOCTORS:
             widgets = self.doctor_widgets.get(doctor["name"])
             if not widgets: continue
+
+            doctor_name_to_display = doctor.get("name_hi") if is_hindi else doctor.get("name")
+            widgets["name_label"].config(text=doctor_name_to_display)
 
             if doctor["availability"] == "Available":
                 widgets["status_label"].config(text=lang.get("available"), fg='green')
                 widgets["action_button"].config(
                     text=lang.get("notify_doctor"), bg='#2ECC71', state="normal",
-                    command=lambda name=doctor["name"]: self.notify_doctor(name)
+                    command=lambda name=doctor_name_to_display: self.notify_doctor(name)
                 )
             else:
                 widgets["status_label"].config(text=lang.get("unavailable"), fg='red')

@@ -17,6 +17,15 @@
     "Cardiology": "हृदय रोग विज्ञान", "Orthopedics": "अस्थि-रोग विज्ञान", "Dermatology": "त्वचाविज्ञान",
     "Neurology": "तंत्रिका-विज्ञान", "Gynecology": "स्त्री रोग विज्ञान", "General Physician": "सामान्य चिकित्सक"
   },
+  "weekdays": {
+    "mon": "सोमवार",
+    "tue": "मंगलवार",
+    "wed": "बुधवार",
+    "thu": "गुरुवार",
+    "fri": "शुक्रवार",
+    "sat": "शनिवार",
+    "sun": "रविवार"
+  },
   "booking_title": "अपॉइंटमेंट बुकिंग फॉर्म",
   "booking_for": "के लिए बुकिंग: {doctor_name}",
   "patient_name": "रोगी का नाम:",
