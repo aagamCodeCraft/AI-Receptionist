@@ -14,6 +14,9 @@ class WelcomeScreen(tk.Frame):
 
     def load_icons(self):
         icon_size = (32, 32)
+        # --- ADDITION: Load the back icon ---
+        self.back_icon = self._load_icon("back_arrow.png", (24, 24))
+        
         self.appointment_icon = self._load_icon("appointment.png", icon_size)
         self.emergency_icon = self._load_icon("emergency.png", icon_size)
         self.lab_test_icon = self._load_icon("lab_test.png", icon_size)
@@ -24,28 +27,43 @@ class WelcomeScreen(tk.Frame):
         try:
             return ImageTk.PhotoImage(Image.open(path).resize(size, Image.LANCZOS))
         except FileNotFoundError:
+            print(f"Warning: Icon file not found at {path}")
             return None
 
     def setup_widgets(self):
-        self.title_label = tk.Label(self, font=self.controller.title_font, bg='#EAF2F8', fg='#2C3E50')
-        self.title_label.pack(side="top", fill="x", pady=(40, 20))
+        # --- Header Frame for the Back Button ---
+        header_frame = tk.Frame(self, bg='#EAF2F8')
+        header_frame.pack(side="top", fill="x", padx=10, pady=10)
+
+        back_button = tk.Button(header_frame, image=self.back_icon, bg='#EAF2F8', relief="flat",
+                                command=lambda: self.controller.show_frame("LanguageSelectionScreen"))
+        if self.back_icon:
+            back_button.image = self.back_icon # Keep a reference
+        back_button.pack(side="left")
+
+        # --- Main Content Frame for all other widgets ---
+        main_content_frame = tk.Frame(self, bg='#EAF2F8')
+        main_content_frame.pack(expand=True)
+        
+        self.title_label = tk.Label(main_content_frame, font=self.controller.title_font, bg='#EAF2F8', fg='#2C3E50')
+        self.title_label.pack(side="top", fill="x", pady=(0, 20))
 
         button_font = self.controller.button_font
         
         self.buttons_config = {
             "book_appointment": {"icon": self.appointment_icon, "command": lambda: self.controller.show_frame("SpecialtySelectionScreen")},
             "emergency": {"icon": self.emergency_icon, "command": self.trigger_emergency_alarm},
-            "lab_test": {"icon": self.lab_test_icon, "command": lambda: self.controller.show_frame("LabTestSelectionScreen")},
-            # --- THIS IS THE CHANGE: The button now goes to the new screen ---
+            "lab_test": {"icon": self.lab_test_icon, "command": lambda: self.controller.show_frame("LabTestScreen")},
             "existing_appointment": {"icon": self.existing_appointment_icon, "command": lambda: self.controller.show_frame("ExistingAppointmentScreen")}
         }
         
         self.buttons = {}
         for key, config in self.buttons_config.items():
-            btn = tk.Button(self, image=config["icon"], compound="left", font=button_font,
+            btn = tk.Button(main_content_frame, image=config["icon"], compound="left", font=button_font,
                              command=config["command"], fg="white",
                              width=250, height=50, padx=15, relief="flat")
-            btn.image = config["icon"]
+            if config["icon"]:
+                btn.image = config["icon"]
             btn.pack(pady=8)
             self.buttons[key] = btn
         
@@ -53,6 +71,9 @@ class WelcomeScreen(tk.Frame):
         self.buttons["emergency"].config(bg="#E74C3C")
         self.buttons["lab_test"].config(bg="#2ECC71")
         self.buttons["existing_appointment"].config(bg="#F1C40F")
+
+        # Call update_language at the end of setup
+        self.update_language()
 
     def trigger_emergency_alarm(self):
         sound_path = os.path.join("assets", "sounds", "emergency_alarm.wav")
