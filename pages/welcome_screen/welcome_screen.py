@@ -14,7 +14,6 @@ class WelcomeScreen(tk.Frame):
 
     def load_icons(self):
         icon_size = (32, 32)
-        # --- ADDITION: Load the back icon ---
         self.back_icon = self._load_icon("back_arrow.png", (24, 24))
         
         self.appointment_icon = self._load_icon("appointment.png", icon_size)
@@ -31,17 +30,15 @@ class WelcomeScreen(tk.Frame):
             return None
 
     def setup_widgets(self):
-        # --- Header Frame for the Back Button ---
         header_frame = tk.Frame(self, bg='#EAF2F8')
         header_frame.pack(side="top", fill="x", padx=10, pady=10)
 
         back_button = tk.Button(header_frame, image=self.back_icon, bg='#EAF2F8', relief="flat",
                                 command=lambda: self.controller.show_frame("LanguageSelectionScreen"))
         if self.back_icon:
-            back_button.image = self.back_icon # Keep a reference
+            back_button.image = self.back_icon
         back_button.pack(side="left")
 
-        # --- Main Content Frame for all other widgets ---
         main_content_frame = tk.Frame(self, bg='#EAF2F8')
         main_content_frame.pack(expand=True)
         
@@ -53,7 +50,8 @@ class WelcomeScreen(tk.Frame):
         self.buttons_config = {
             "book_appointment": {"icon": self.appointment_icon, "command": lambda: self.controller.show_frame("SpecialtySelectionScreen")},
             "emergency": {"icon": self.emergency_icon, "command": self.trigger_emergency_alarm},
-            "lab_test": {"icon": self.lab_test_icon, "command": lambda: self.controller.show_frame("LabTestScreen")},
+            # --- THIS IS THE FIX: Changed "LabTestScreen" to "LabTestSelectionScreen" ---
+            "lab_test": {"icon": self.lab_test_icon, "command": lambda: self.controller.show_frame("LabTestSelectionScreen")},
             "existing_appointment": {"icon": self.existing_appointment_icon, "command": lambda: self.controller.show_frame("ExistingAppointmentScreen")}
         }
         
@@ -72,7 +70,6 @@ class WelcomeScreen(tk.Frame):
         self.buttons["lab_test"].config(bg="#2ECC71")
         self.buttons["existing_appointment"].config(bg="#F1C40F")
 
-        # Call update_language at the end of setup
         self.update_language()
 
     def trigger_emergency_alarm(self):
